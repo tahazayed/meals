@@ -82,13 +82,17 @@ function list(limit, token, term, cb) {
 				cb(null, results.map(fromMongo), hasMore, term);
 			});
 		} else {
+			term = term.replace('%20', ' ');
+			/*
 			collection.find({
 				$or: [{
 						"n": new RegExp(term, 'i')
 					}, {
-						"ingrd.n": new RegExp(term, 'i')
-					}, {
 						"tags": new RegExp(term, 'i')
+					}
+					,
+					{
+						"ingrd.n": new RegExp(term, 'i')
 					}, {
 						"instrct.txt": new RegExp(term, 'i')
 					}
@@ -108,6 +112,27 @@ function list(limit, token, term, cb) {
 					results.length === limit ? token + results.length : false;
 				cb(null, results.map(fromMongo), hasMore, term);
 			});
+			*/
+
+
+			collection.find({ 
+			$text: { $search: term}},{ score: { $meta: "textScore" } }).sort( { score: { $meta: "textScore" } }
+			)
+			.skip(token)
+			.limit(limit)
+			.sort({
+				'likes': -1
+			})
+			.toArray((err, results) => {
+				if (err) {
+					cb(err);
+					return;
+				}
+				const hasMore =
+					results.length === limit ? token + results.length : false;
+				cb(null, results.map(fromMongo), hasMore, term);
+			});
+
 		}
 	});
 }
