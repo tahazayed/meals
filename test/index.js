@@ -13,26 +13,30 @@
 
 'use strict';
 
-const MongoClient = require(`mongodb`).MongoClient;
+const config = require(`./config`);
+const utils = require(`nodejs-repo-tools`);
 
-describe(`Bookshelf app`, () => {
-  require(`../1-hello-world/test`);
-  require(`../2-structured-data/test`);
-  require(`../3-binary-data/test`);
-  require(`../4-auth/test`);
-  require(`../5-logging/test`);
-  require(`../6-pubsub/test`);
-  require(`../7-gce/test`);
-  after((done) => {
-    const config = require(`../7-gce/config`);
-    if (config.get(`DATA_BACKEND`) !== `mongodb`) {
-      return done();
+describe(`${config.test}/`, () => {
+  if (!process.env.E2E_TESTS) {
+    it(`should install dependencies`, (done) => {
+      utils.testInstallation(config, done);
+    }).timeout(120 * 1000);
+  }
+  require(`./app.test`);
+  describe(`books/`, () => {
+    const appConfig = require(`../config`);
+    const DATA_BACKEND = appConfig.get(`DATA_BACKEND`);
+    if (DATA_BACKEND === `datastore` || process.env.TEST_DATASTORE) {
+      require(`./api.test`)(`datastore`);
+      require(`./crud.test`)(`datastore`);
     }
-    MongoClient.connect(config.get(`MONGO_URL`), (err, db) => {
-      if (err) {
-        return done(err);
-      }
-      db.collection(config.get(`MONGO_COLLECTION`)).remove(done);
-    });
+    if (DATA_BACKEND === `cloudsql` || process.env.TEST_CLOUDSQL) {
+      require(`./api.test`)(`cloudsql`);
+      require(`./crud.test`)(`cloudsql`);
+    }
+    if (DATA_BACKEND === `mongodb` || process.env.TEST_MONGODB) {
+      require(`./api.test`)(`mongodb`);
+      require(`./crud.test`)(`mongodb`);
+    }
   });
 });
