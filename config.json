@@ -1,0 +1,6 @@
+{
+	"GCLOUD_PROJECT": "mohab-1139",
+	"DATA_BACKEND": "mongodb",
+	"MONGO_URL": "mongodb://website:Don'tLogin@ds127321.mlab.com:27321/heroku_v65c6f57",
+	"MONGO_COLLECTION": "recipes"
+}
